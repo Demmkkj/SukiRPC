@@ -1,4 +1,4 @@
-<p align="center"><img src="branding/sukirpc_logo.png" width="112" alt="SukiRPC logo" /></p>
+<p align="center"><img src="branding/sukirpc_eclipse.svg" width="112" alt="SukiRPC logo" /></p>
 <h1 align="center">SukiRPC</h1>
 <p align="center"><strong>E C L I P S E</strong></p>
 <p align="center">One presence. Anywhere.</p>
