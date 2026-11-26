@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.22.1)
+project(nuvio_rpc LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+find_package(discord_partner_sdk REQUIRED CONFIG)
+add_library(nuvio_rpc SHARED rpc.cpp)
+target_link_libraries(nuvio_rpc discord_partner_sdk::discord_partner_sdk log)

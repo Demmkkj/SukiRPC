@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+android {
+    lint {
+        disable += 'ExpiredTargetSdkVersion'
+    }
+
+    // SUKIRPC_SIGNING
+    signingConfigs {
+        debug {
+            storeFile file(System.getProperty("user.home") + "/.android/debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            // Preserve existing installed certificate for this private RC.
+            signingConfig signingConfigs.debug
+            debuggable false
+            minifyEnabled false
+        }
+    }
+
+    namespace 'dev.nuvio.collector'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'dev.nuvio.collector'
+        minSdk 26
+        targetSdk 28
+        versionCode (1000 + (System.getenv("GITHUB_RUN_NUMBER") ?: "0").toInteger())
+        versionName '0.3.2'
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
+
+dependencies {
+    implementation 'com.google.zxing:core:3.5.3'
+}

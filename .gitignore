@@ -1,0 +1,22 @@
+
+# Local build files and private material
+.gradle/
+.kotlin/
+**/build/
+**/.cxx/
+local.properties
+*.aar
+*.apk
+*.aab
+*.so
+*.jar
+*.keystore
+*.jks
+*.p12
+*.pem
+*.key
+*.log
+*.bak
+.sukirpc-backup*/
+.env*
+/dist/

@@ -84,6 +84,10 @@ Report bugs through [GitHub Issues](https://github.com/Demmkkj/SukiRPC/issues). 
 
 ## Credits
 
-Built using Kotlin, Jetpack Compose, Java, C++ and the Discord Social SDK. SukiRPC is an independent project and is not affiliated with Nuvio, Discord or Amazon. This repository contains public distribution and documentation, not the private development history or SDK archive.
+Built using Kotlin, Jetpack Compose, Java, C++ and the Discord Social SDK. SukiRPC is an independent project and is not affiliated with Nuvio, Discord or Amazon. This repository contains the open-source SukiRPC application and Collector, documentation and official downloads. The private development history and proprietary Discord SDK archive are not included.
 
 <p align="center"><strong>SukiRPC · Eclipse</strong><br />One presence. Anywhere.</p>
+
+## Source code and license
+
+SukiRPC's original source code is available under the [MIT License](LICENSE). See [build instructions](BUILDING.md) and [third-party notices](THIRD_PARTY_NOTICES.md). The Discord Social SDK remains a separate proprietary dependency and is not included. Contributions via pull requests are welcome.
