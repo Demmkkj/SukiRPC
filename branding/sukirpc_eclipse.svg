@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="512" height="512" role="img" aria-label="SukiRPC Eclipse">
+<defs>
+<radialGradient id="bg" cx="82%" cy="91%" r="92%"><stop offset="0" stop-color="#542098"/><stop offset=".48" stop-color="#201032"/><stop offset="1" stop-color="#0D0918"/></radialGradient>
+<linearGradient id="moon" gradientUnits="userSpaceOnUse" x1="36" y1="28" x2="70" y2="84"><stop stop-color="#FFF6FF"/><stop offset=".42" stop-color="#DCC8FF"/><stop offset=".72" stop-color="#9872DF"/><stop offset="1" stop-color="#C584FF"/></linearGradient>
+<linearGradient id="star" x2=".6" y2="1"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#C9A4FF"/></linearGradient>
+<linearGradient id="rim" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#B98AF5"/><stop offset=".35" stop-color="#39234F"/><stop offset=".75" stop-color="#30154E"/><stop offset="1" stop-color="#9047EC"/></linearGradient>
+</defs>
+<rect x=".6" y=".6" width="106.8" height="106.8" rx="26" fill="url(#bg)" stroke="url(#rim)" stroke-width="1.2"/>
+<g transform="translate(54 54) scale(1.25) translate(-54 -54)">
+<path d="M63,27 C44,21 25,35 25,55 C25,72 38,84 55,84 C72,84 83,70 82,53 C80,67 70,76 57,76 C43,76 34,64 36,50 C38,37 49,28 63,27 Z" fill="url(#moon)"/>
+<path d="M73,29 C74,35 76,37 82,38 C76,39 74,41 73,47 C72,41 70,39 64,38 C70,37 72,35 73,29 Z" fill="url(#star)"/>
+</g>
+</svg>
