@@ -1,28 +1,33 @@
-# SukiRPC 1.0.0 · Eclipse
+# SukiRPC 2.1.2 · Genesis
 
-**One presence. Anywhere.**
+**Build 68 · Android 8.0+**
 
-The first public major release of SukiRPC brings Discord Rich Presence to Nuvio Mobile and Nuvio TV, with TV integration primarily designed for Amazon Fire TV Stick.
+Genesis reorganiza o SukiRPC em cinco áreas — Início, Extensões, RPC Studio, Chronicle e Ajustes — e reúne as correções da Operation Refinement para notificações, Collector e Rich Presence.
 
-## What's new
+## Novidades
 
-- **Eclipse:** minimalist UI, OLED theme, spring motion, native splash screen and dynamic notifications.
-- **Nuvio Mobile:** local media-session integration and optional automatic artwork lookup.
-- **Nuvio TV:** bundled Collector, encrypted local connection and QR/manual pairing, with Fire TV Stick as the primary target.
-- **Performance:** adaptive polling, event-driven media-session cache invalidation, optimized artwork handling and reduced background work.
-- **Updates:** integrated update center, per-architecture downloads, SHA-256 and signer checks.
-- **Distribution:** non-debuggable release APKs for ARM64, ARM32, x86 and x86-64, plus a universal build.
+- **Genesis** — painel com atividade atual, progresso e prévia da presença. O Chronicle ganhou categorias, capas e filtros.
+- **Horizon** — extensões de mídia agrupadas, com suporte a capas quando a sessão oferece metadados compatíveis. Uma capa no painel pode estar disponível apenas localmente.
+- **Echo e Collector** — pareamento por QR ou código e captura mais estável de sessões na TV. O Collector lê o estado de cada sessão autorizada uma vez por amostra e fecha conexões ao desligar.
+- **Prism e Discord** — a notificação passa a ocultar os campos configurados no Prism. Respostas antigas do SDK deixam de sobrescrever o estado da presença atual.
+- **Aurora** — tema Genesis claro e escuro e modos Eco, Balanced e Ultra. O blur em tempo real fica no Ultra.
 
-## Installation
+## Qual APK baixar?
 
-Download the APK that matches your device. Most modern phones use `arm64-v8a`; choose the universal APK if unsure. Android 8.0 or newer is required. Existing installations can update in place when the signing certificate and version code are compatible.
+| Arquivo | Dispositivo |
+| --- | --- |
+| `SukiRPC-arm64-v8a.apk` | Celulares Android modernos, incluindo o Redmi 14C |
+| `SukiRPC-armeabi-v7a.apk` | Android ARM de 32 bits |
+| `SukiRPC-x86.apk` | Android x86 de 32 bits |
+| `SukiRPC-x86_64.apk` | Android x86 de 64 bits |
+| `SukiRPC-universal.apk` | Qualquer uma das arquiteturas acima |
 
-For Fire TV Stick, use the Collector included in the mobile application. See the README for setup instructions.
+Para atualizar, instale o APK por cima da instalação atual. O Android exige uma assinatura compatível. Os arquivos `SHA256SUMS.txt` e `update.json` acompanham os APKs.
 
-## Known limitations
+## Compatibilidade e validação
 
-- Artwork and playback details depend on available metadata; external artwork lookup is optional.
-- Other Android TV and Fire OS devices may work but are not guaranteed compatible.
-- The integration depends on compatible Nuvio and Discord versions.
+- Os cinco APKs e a configuração alternativa de R8 passaram no CI. Os testes de navegação e de inicialização da ponte JNI passaram no emulador Android 15.
+- A exibição de capas no Discord depende dos metadados e do cliente. A nova rodada de testes físicos de pareamento no Fire TV e de desempenho em aparelhos de 4 GB continua pendente.
+- Para relatar um problema, informe o modelo, a versão do Android e a integração utilizada. Remova códigos de pareamento, credenciais e dados privados do relato.
 
-The release includes `SHA256SUMS.txt` and `update.json`. Please remove private information from diagnostic logs before submitting bug reports.
+[Issues](https://github.com/Demmkkj/SukiRPC/issues) · [Changelog](https://github.com/Demmkkj/SukiRPC/blob/main/CHANGELOG.md)
