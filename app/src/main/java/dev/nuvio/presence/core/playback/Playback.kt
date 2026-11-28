@@ -4,8 +4,15 @@ import kotlin.math.abs
 
 private val validPlaybackStates=setOf("playing","paused","buffering","connecting","forwarding","rewinding")
 
-internal data class Playback(val title:String,val episode:String,val mediaId:String,val artwork:String,val state:String,val position:Long,val duration:Long,val speed:Double,val receivedAt:Long){
-    val identity=listOf(mediaId,title,episode)
+internal data class Playback(val title:String,val episode:String,val mediaId:String,val artwork:String,val state:String,val position:Long,val duration:Long,val speed:Double,val receivedAt:Long,val year:String="",val genre:String="",val appId:String="",
+    val artworkSource: String = "", val artworkRejected: Boolean = false,
+    val localArtwork: ByteArray? = null, val remoteArtworkKey: String = "",
+    val artworkPermitted: Boolean = true, val artworkSignals: String = ""
+){
+    fun withoutArtwork() = copy(artwork = "", artworkSource = "", artworkRejected = false,
+        localArtwork = null, remoteArtworkKey = "", artworkPermitted = false, artworkSignals = "")
+
+    val identity=listOf(mediaId,title,episode,appId)
     val valid get()=title.isNotBlank() && state in validPlaybackStates && !(state=="playing"&&duration>0&&position>=duration)
     val ticking get()=state=="playing"&&speed==1.0&&position>=0
     fun positionAt(now:Long):Long {
@@ -35,10 +42,12 @@ internal fun presenceFor(p:Playback?,o:Options,mono:Long,wall:Long):Presence? {
 internal fun needsUpdate(old:Presence?,next:Presence?):Boolean {
     if(old==null||next==null)return old!=next
     if(!old.sameContent(next))return true
-    if(next.start>0){
+    if(next.start>0||next.end>0){
+        if(next.start==0L&&abs(old.end-next.end)>1800)return true
         val expected=old.anchorPosition+(next.anchorMono-old.anchorMono)
         if(abs(expected-next.anchorPosition)>1800||abs(old.clockOffset-next.clockOffset)>1800)return true
         if(old.end>0&&next.end>0&&abs((old.end-old.start)-(next.end-next.start))>1000)return true
     }
     return false
 }
+

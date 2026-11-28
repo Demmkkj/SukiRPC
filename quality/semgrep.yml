@@ -1,0 +1,21 @@
+rules:
+  - id: suki-cleartext-webview
+    languages: [java, kotlin]
+    message: Production WebViews must preserve HTTPS mixed-content restrictions.
+    severity: ERROR
+    pattern-either:
+      - pattern: $SETTINGS.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW)
+      - pattern: $SETTINGS.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+  - id: suki-world-readable-preferences
+    languages: [java, kotlin]
+    message: Persist credentials and settings with private Android preferences.
+    severity: ERROR
+    pattern-either:
+      - pattern: $C.getSharedPreferences($NAME, Context.MODE_WORLD_READABLE)
+      - pattern: $C.getSharedPreferences($NAME, Context.MODE_WORLD_WRITEABLE)
+  - id: suki-insecure-hostname-verifier
+    languages: [java]
+    message: A TLS hostname verifier that always succeeds deserves manual review.
+    severity: ERROR
+    pattern: |
+      boolean verify(String $HOST, SSLSession $SESSION) { return true; }

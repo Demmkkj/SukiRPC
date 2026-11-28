@@ -1,0 +1,2 @@
+PASS: timestamps, progression, seek, episode changes, pause, resume, buffering, skip, end, disconnect, speed, clock adjustment and stale projection
+PASS: overlay installer on mock clean repository

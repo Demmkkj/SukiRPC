@@ -1,7 +1,9 @@
 package dev.nuvio.presence
 
+import dev.nuvio.presence.ui.themes.*
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.Modifier
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import com.journeyapps.barcodescanner.ScanContract
@@ -40,7 +42,7 @@ internal fun PairQrButton(
             else onScanned(data.ip, data.identity, data.code)
         }
     }
-    OutlinedButton(enabled = enabled, onClick = {
+    GlassButton(enabled = enabled, modifier=Modifier.fillMaxWidth(), onClick = {
         try {
             launcher.launch(ScanOptions().apply {
                 setDesiredBarcodeFormats(ScanOptions.QR_CODE)

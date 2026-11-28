@@ -1,0 +1,1 @@
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android" android:minWidth="110dp" android:minHeight="54dp" android:minResizeWidth="72dp" android:minResizeHeight="42dp" android:initialLayout="@layout/suki_widget" android:updatePeriodMillis="0" android:resizeMode="horizontal|vertical" android:widgetCategory="home_screen"/>

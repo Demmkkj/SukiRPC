@@ -1,0 +1,12 @@
+if (plugins.hasPlugin('org.jetbrains.kotlin.android') && providers.gradleProperty('sukiCoverage').isPresent()) {
+    apply plugin: 'org.jetbrains.kotlinx.kover'
+}
+android.testOptions.unitTests.includeAndroidResources = true
+android.testOptions.unitTests.all {
+    systemProperty 'robolectric.dependency.repo.url', 'https://repo.maven.apache.org/maven2'
+}
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.15.1'
+    testImplementation 'androidx.test:core:1.6.1'
+}

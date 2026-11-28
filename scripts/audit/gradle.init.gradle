@@ -1,0 +1,47 @@
+import groovy.json.JsonOutput
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.result.UnresolvedDependencyResult
+
+gradle.beforeProject { project ->
+    project.pluginManager.withPlugin('com.android.application') {
+        def android = project.extensions.getByName('android')
+        if (project.hasProperty('sukiAuditLint')) {
+            def reports = new File(project.property('sukiAuditLint').toString())
+            android.lint {
+                xmlReport = true
+                xmlOutput = new File(reports, project.name + '.xml')
+                htmlReport = true
+                htmlOutput = new File(reports, project.name + '.html')
+            }
+        }
+        if (project.path == ':app' && project.hasProperty('sukiAuditNative')) {
+            android.defaultConfig.externalNativeBuild.cmake.arguments '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON'
+            android.externalNativeBuild.cmake.buildStagingDirectory project.file('.cxx/audit')
+        }
+        project.tasks.register('auditDependencies') {
+            group = 'verification'
+            doLast {
+                def runtime = project.configurations.getByName('releaseRuntimeClasspath')
+                def graph = runtime.incoming.resolutionResult
+                def unresolved = graph.allDependencies.findAll { it instanceof UnresolvedDependencyResult }
+                if (unresolved) {
+                    throw new GradleException("Unresolved audit dependencies: " + unresolved.collect { it.attempted }.join(', '))
+                }
+                def artifacts = runtime.resolve()
+                if (project.path == ':app' && !artifacts.any { it.name == 'discord_partner_sdk.aar' && it.isFile() }) {
+                    throw new GradleException('Private Discord SDK missing from runtime classpath')
+                }
+                def components = graph.allComponents.collect { it.id }
+                    .findAll { it instanceof ModuleComponentIdentifier }
+                    .collect { [group: it.group, name: it.module, version: it.version] }
+                    .sort { a, b -> (a.group + ':' + a.name + ':' + a.version) <=> (b.group + ':' + b.name + ':' + b.version) }
+                if (components.isEmpty()) throw new GradleException('Empty runtime inventory')
+                def file = new File(project.property('sukiAuditOutput').toString(), project.name + '.json')
+                file.parentFile.mkdirs()
+                file.text = JsonOutput.prettyPrint(JsonOutput.toJson([
+                    module: project.path, configuration: runtime.name, packages: components
+                ])) + '\n'
+            }
+        }
+    }
+}

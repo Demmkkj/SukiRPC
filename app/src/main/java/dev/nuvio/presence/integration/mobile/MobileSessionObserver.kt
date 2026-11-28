@@ -17,8 +17,11 @@ internal class MobileSessionObserver(context:Context) {
     private val context=context.applicationContext
     private val manager=this.context.getSystemService(MediaSessionManager::class.java)
     private val handler=Handler(Looper.getMainLooper())
+    private val rules=Integrations(context)
+    private val prefsListener=android.content.SharedPreferences.OnSharedPreferenceChangeListener{_,key->if(key?.startsWith("hz.")==true)dirty.set(true)}
     private val dirty=AtomicBoolean(true)
     private val callbacks=LinkedHashMap<MediaSession.Token,Pair<MediaController,MediaController.Callback>>()
+    init{rules.prefs.registerOnSharedPreferenceChangeListener(prefsListener)}
     @Volatile private var tracked=emptyList<MediaSession.Token>()
     private var listening=false
     private var healthy=false
@@ -26,23 +29,23 @@ internal class MobileSessionObserver(context:Context) {
     private var sampledAt=-1L
     private var artworkEnabled=false
     private var cached:Playback?=null
-    private var cachedStatus="sem dados"
+    private var lastPrivacy = MediaPrivacy()
+    private val bitmapCache = SessionBitmapCache()
     private val listener=MediaSessionManager.OnActiveSessionsChangedListener { sessions ->
         // Ignore changes involving only unrelated apps; never inspect their metadata.
-        val tokens=sessions.orEmpty().filter{NuvioMobileProvider.accepts(it)}.map{it.sessionToken}
+        val tokens=sessions.orEmpty().filter{NuvioMobileProvider.accepts(context,it)}.map{it.sessionToken}
         if(tokens!=tracked)dirty.set(true)
     }
 
-    @Synchronized fun read(showArtwork:Boolean):Playback? {
+    @Synchronized fun read(showArtwork:Boolean,privacy:MediaPrivacy = MediaPrivacy()):Playback? {
         if(closed)return null
         if(!NuvioMobileProvider.allowed(context)){
             release()
-            NuvioMobileProvider.artworkStatus="sem acesso às notificações"
             return null
         }
         val now=SystemClock.elapsedRealtime()
         val changed=dirty.getAndSet(false)
-        if(changed||!healthy||sampledAt<0||now-sampledAt>=10000L||artworkEnabled!=showArtwork){
+        if(changed||!healthy||sampledAt<0||now-sampledAt>=10000L|| artworkEnabled != showArtwork || lastPrivacy != privacy){
             try {
                 if(!listening){
                     listening=runCatching{
@@ -73,8 +76,8 @@ internal class MobileSessionObserver(context:Context) {
                 }
                 // If callbacks are not available, read normally at every service poll.
                 healthy=listening&&tokens.all{callbacks.containsKey(it)}
-                cached=NuvioMobileProvider.readSample(controllers,showArtwork)
-                cachedStatus=NuvioMobileProvider.artworkStatus
+                cached = NuvioMobileProvider.readSample(rules, cached?.appId, controllers, showArtwork, privacy, bitmapCache)
+                lastPrivacy = privacy
                 artworkEnabled=showArtwork
                 sampledAt=SystemClock.elapsedRealtime()
             }catch(e:Exception){
@@ -93,16 +96,15 @@ internal class MobileSessionObserver(context:Context) {
             if(pos>=0&&sample.duration>0)pos=pos.coerceAtMost(sample.duration)
             sample.copy(position=pos,receivedAt=time).takeIf{it.valid}
         }
-        NuvioMobileProvider.artworkStatus=if(p==null)"sem sessao valida" else cachedStatus
-        // Resolve async cover results even if media metadata itself has not changed.
-        return NuvioMobileProvider.resolvePoster(context,p,showArtwork)
+        return p
     }
 
     private fun release(){
         if(listening)runCatching{manager.removeOnActiveSessionsChangedListener(listener)}
         listening=false
         for((controller,callback) in callbacks.values)runCatching{controller.unregisterCallback(callback)}
-        callbacks.clear();tracked=emptyList();healthy=false;cached=null;sampledAt=-1L;dirty.set(true)
+        callbacks.clear();tracked=emptyList();healthy=false;cached=null;sampledAt=-1L;bitmapCache.clear();dirty.set(true)
     }
-    @Synchronized fun close(){if(!closed){closed=true;release()}}
+    @Synchronized fun close(){if(!closed){closed=true;rules.prefs.unregisterOnSharedPreferenceChangeListener(prefsListener);release()}}
 }
+

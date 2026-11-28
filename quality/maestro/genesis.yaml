@@ -1,0 +1,10 @@
+appId: dev.nuvio.presence.quality
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    text: "Agora não"
+    optional: true
+- assertVisible: "Início"
+- tapOn: "Ajustes"
+- assertVisible: "Rich Presence"

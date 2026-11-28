@@ -51,7 +51,7 @@ internal fun EclipseTheme(colorScheme: ColorScheme, typography: Typography = Typ
 @Composable
 internal fun EclipsePage(tab: Int, content: @Composable (Int) -> Unit) {
     val states = rememberSaveableStateHolder()
-    Crossfade(targetState = tab, animationSpec = tween(180), label = "eclipse_page") { page ->
+    Crossfade(targetState = tab, animationSpec = tween(if(android.animation.ValueAnimator.areAnimatorsEnabled())180 else 0), label = "eclipse_page") { page ->
         states.SaveableStateProvider(page) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -90,11 +90,11 @@ private fun SpringButton(label: String, enabled: Boolean = true, filled: Boolean
 @Composable
 internal fun EclipseSettingsLink(title: String, summary: String, onClick: () -> Unit) {
     Surface(modifier = Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick),
-        color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(18.dp)) {
+        color = MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.medium) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(title, fontWeight = FontWeight.Medium)
-                Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if(summary.isNotBlank())Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Text("›", fontSize = 24.sp, color = MaterialTheme.colorScheme.primary)
         }
@@ -109,7 +109,7 @@ internal fun EclipseNavigation(tab: Int, onTab: (Int) -> Unit) {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 14.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(0 to "Início", 1 to "Dispositivos", 3 to "Ajustes").forEach { (id, name) ->
+                listOf(0 to "Início", 1 to "Dispositivos", 5 to "RPC Studio", 3 to "Ajustes").forEach { (id, name) ->
                     val color by animateColorForNav(current == id)
                     val selected = current == id
                     Box(Modifier.weight(1f).heightIn(min = 48.dp).clip(RoundedCornerShape(14.dp))

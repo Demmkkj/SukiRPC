@@ -1,0 +1,56 @@
+apply from: rootProject.file('scripts/quality/jvm.gradle')
+
+android {
+    defaultConfig.testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
+    if (providers.gradleProperty('sukiDeviceTests').isPresent() || providers.gradleProperty('sukiDiagnostics').isPresent()) {
+        buildTypes.debug.applicationIdSuffix = '.quality'
+    }
+    if (providers.gradleProperty('sukiBenchmarks').isPresent()) {
+        buildTypes {
+            benchmark {
+                initWith release
+                signingConfig signingConfigs.debug
+                applicationIdSuffix '.benchmark'
+                matchingFallbacks = ['release']
+                minifyEnabled false
+                shrinkResources false
+                debuggable false
+            }
+        }
+        sourceSets.benchmark.manifest.srcFile rootProject.file('quality/manifests/benchmark.xml')
+    }
+    if (providers.gradleProperty('sukiSanitizers').isPresent()) {
+        buildTypes {
+            hwasan {
+                initWith debug
+                applicationIdSuffix '.hwasan'
+                matchingFallbacks = ['debug']
+                externalNativeBuild.cmake.arguments '-DSUKI_SANITIZER=hwasan'
+            }
+            ubsan {
+                initWith debug
+                applicationIdSuffix '.ubsan'
+                matchingFallbacks = ['debug']
+                externalNativeBuild.cmake.arguments '-DSUKI_SANITIZER=ubsan'
+            }
+        }
+        sourceSets.hwasan.resources.srcDir rootProject.file('quality/hwasan')
+        packaging.jniLibs.useLegacyPackaging = true
+    }
+    if (providers.gradleProperty('sukiDiagnostics').isPresent()) {
+        sourceSets.debug.manifest.srcFile rootProject.file('quality/manifests/diagnostics.xml')
+        sourceSets.debug.java.srcDir rootProject.file('quality/diagnostics/java')
+    }
+}
+dependencies {
+    testImplementation 'io.mockk:mockk-jvm:1.14.2'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.1'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation platform('androidx.compose:compose-bom:2025.03.00')
+    androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
+    if (providers.gradleProperty('sukiDiagnostics').isPresent()) {
+        debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
+    }
+}

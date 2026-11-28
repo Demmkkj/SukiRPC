@@ -1,0 +1,24 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'app.cash.paparazzi' version '1.3.5'
+}
+
+def copiedArtwork = layout.buildDirectory.dir('generated/productionArtwork')
+def stageArtwork = tasks.register('stageProductionArtwork', Sync) {
+    from rootProject.file('app/src/main/res/drawable/suki_eclipse_notification.xml')
+    into copiedArtwork.map { it.dir('drawable') }
+}
+android {
+    namespace 'dev.nuvio.quality.visual'
+    compileSdk 35
+    defaultConfig { minSdk 26 }
+    sourceSets.main.res.srcDir copiedArtwork
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions.jvmTarget = '17'
+}
+tasks.named('preBuild').configure { dependsOn stageArtwork }
+dependencies { testImplementation 'junit:junit:4.13.2' }

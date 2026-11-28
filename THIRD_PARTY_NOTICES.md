@@ -4,4 +4,6 @@ The MIT license covers the original SukiRPC source and documentation to the exte
 
 The Discord Social SDK is a separate proprietary dependency and is not included in this source repository. Obtain it only through authorized channels and comply with its applicable terms: https://support-dev.discord.com/hc/en-us/articles/30225844245271-Discord-Social-SDK-Terms .
 
+The bundled fonts are distributed under the SIL Open Font License 1.1. See [Manrope](licenses/Manrope-OFL.txt) and [JetBrains Mono](licenses/JetBrainsMono-OFL.txt) for the font-specific copyright and license texts.
+
 Gradle dependencies are declared in the module build files and retain their own licenses. Review their upstream license and notice requirements before redistributing any APK; this file is not a complete dependency license inventory.

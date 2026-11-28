@@ -1,6 +1,9 @@
 package dev.nuvio.presence
 
 import org.json.JSONObject
+import android.util.Base64
+import dev.nuvio.artwork.ArtworkPolicy
+import dev.nuvio.artwork.SessionArtwork
 import java.io.ByteArrayOutputStream
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -33,7 +36,7 @@ internal object LanClient {
                 val cert=chain.firstOrNull()?:throw CertificateException("certificado ausente")
                 cert.checkValidity()
                 val fingerprint=hex(MessageDigest.getInstance("SHA-256").digest(cert.encoded))
-                if(!MessageDigest.isEqual(fingerprint.take(pin.length).toByteArray(),pin.toByteArray())) throw CertificateException("Identidade da Fire TV divergente")
+                if(!acceptsPin(pin,fingerprint)) throw CertificateException("Identidade da Fire TV divergente")
                 actual=fingerprint
             }
         }
@@ -61,5 +64,17 @@ internal object LanClient {
         val token=j.getString("token");check(token.matches(Regex("[0-9a-f]{64}"))){"Credencial inválida"}
         return PairedDevice(ip.trim(),full,token)
     }
-    fun playback(d:PairedDevice):JSONObject=request(d.ip,d.pin,JSONObject().put("op","playback").put("token",d.token)).first
+    fun playback(d: PairedDevice, packages: List<String>, artwork: Boolean = true): JSONObject =
+        request(d.ip, d.pin, JSONObject().put("op", "playback").put("packages", org.json.JSONArray(packages))
+            .put("artwork", artwork).put("token", d.token)).first
+
+    fun artwork(d: PairedDevice, key: String): ByteArray? {
+        if (!ArtworkPolicy.validLocalKey(key)) return null
+        val response = request(d.ip, d.pin, JSONObject().put("op", "artwork").put("key", key).put("token", d.token)).first
+        val encoded = response.optString("jpeg")
+        if (response.optString("key") != key || encoded.isEmpty() ||
+            encoded.length > ((ArtworkPolicy.MAX_LOCAL_BYTES + 2) / 3) * 4) return null
+        val bytes = Base64.decode(encoded, Base64.NO_WRAP)
+        return bytes.takeIf(SessionArtwork::validEncoded)
+    }
 }

@@ -1,14 +1,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"/>
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <queries><package android:name="com.discord"/><package android:name="com.nuvio.app"/><package android:name="com.nuviodebug.com"/></queries>
-    <application android:allowBackup="false" android:label="SukiRPC" android:theme="@android:style/Theme.Material.NoActionBar" android:usesCleartextTraffic="false" android:icon="@mipmap/suki_launcher" android:roundIcon="@mipmap/suki_launcher">
+    <queries><package android:name="com.discord"/><package android:name="com.nuvio.app"/><package android:name="com.nuviodebug.com"/><package android:name="com.nuvio.tv"/><package android:name="com.stremio.one"/><package android:name="org.jellyfin.mobile"/><package android:name="org.jellyfin.androidtv"/><package android:name="com.plexapp.android"/><package android:name="org.xbmc.kodi"/><package android:name="org.videolan.vlc"/><package android:name="is.xyz.mpv"/><package android:name="com.spotify.music"/><package android:name="com.spotify.tv.android"/><package android:name="com.google.android.youtube"/><package android:name="com.google.android.youtube.tv"/><package android:name="com.google.android.apps.youtube.music"/></queries>
+    <application android:name=".AuroraApplication" android:allowBackup="false" android:label="SukiRPC" android:theme="@android:style/Theme.Material.NoActionBar" android:usesCleartextTraffic="false" android:icon="@mipmap/suki_launcher" android:roundIcon="@mipmap/suki_launcher">
         <activity android:name=".MainActivity" android:exported="true" android:theme="@style/Theme.SukiRPC.Eclipse.Starting"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
+        <activity android:name=".ControlActivity" android:exported="false" android:theme="@style/Theme.SukiRPC.Eclipse.Starting"/>
+        <receiver android:name=".CompactWidget" android:label="SukiRPC Compact" android:exported="false"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/suki_widget_info"/></receiver>
+        <receiver android:name=".WatchingWidget" android:label="Now Watching" android:exported="false"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/suki_widget_info"/></receiver>
+        <receiver android:name=".DeviceWidget" android:label="SukiRPC Devices" android:exported="false"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/suki_widget_info"/></receiver>
+        <service android:name=".PresenceTile" android:label="SukiRPC" android:icon="@drawable/suki_icon_monochrome" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" android:exported="true"><intent-filter><action android:name="android.service.quicksettings.action.QS_TILE"/></intent-filter><meta-data android:name="android.service.quicksettings.ACTIVE_TILE" android:value="true"/></service>
+        <service android:name=".PrivacyTile" android:label="Privacidade SukiRPC" android:icon="@drawable/suki_icon_monochrome" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" android:exported="true"><intent-filter><action android:name="android.service.quicksettings.action.QS_TILE"/></intent-filter><meta-data android:name="android.service.quicksettings.ACTIVE_TILE" android:value="true"/></service>
         <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.updates" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/suki_update_paths"/>
         </provider>
@@ -18,3 +25,4 @@
         </service>
     </application>
 </manifest>
+

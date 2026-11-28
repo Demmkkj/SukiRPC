@@ -1,0 +1,22 @@
+package dev.nuvio.presence
+fun main(){
+    check(observedTime(100,2100,true)==2000L)
+    check(observedTime(2100,5100,false)==0L)
+    check(observedTime(5100,24100,true)==0L)
+    check(observedTime(100,50,true)==0L)
+    check(canResume(true,1000,6000) && !canResume(false,1000,6000) && !canResume(true,1000,32000))
+    check(csvCell("a,\"b")=="\"a,\"\"b\"")
+    check(csvCell("=1+1").startsWith("\"'"))
+    check(historyCover("https://cdn.discordapp.com/a.gif?token=private").isEmpty())
+    check(historyCover("https://cdn.discordapp.com/a.gif").endsWith(".gif"))
+    fun media(category: String, source: String) = HistoryMedia("", "", "", source, "", category)
+    check(chronicleCategory(media("Mídia", "Spotify Mobile")) == "Músicas")
+    check(chronicleCategory(media("Mídia", "YouTube Music Mobile")) == "Músicas")
+    check(chronicleCategory(media("Mídia", "YouTube TV")) == "Vídeos")
+    check(chronicleCategory(media("Episódio", "Nuvio TV")) == "Séries e filmes")
+    check(chronicleCategory(media("Jogo", "RPC Studio")) == "Jogos")
+    check(chronicleCategory(media("Custom RPC", "RPC Studio")) == "Custom RPC")
+    check(chronicleCategory(media("Mídia", "RPC Studio")) == "Custom RPC")
+    check(chronicleCategory(media("Mídia", "VLC Mobile")) == "Outros")
+    println("PASS: Chronicle timing, pause, interruption, reconnect, CSV and artwork")
+}

@@ -23,11 +23,22 @@ public class PairActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         LinearLayout l = new LinearLayout(this);
-        l.setOrientation(1); l.setPadding(48,32,48,32); l.setBackgroundColor(0xff15131c);
+        l.setOrientation(LinearLayout.VERTICAL);
+        l.setPadding(dp(32), dp(20), dp(32), dp(24));
+        l.setBackgroundColor(0xff100e17);
+        LinearLayout header = new LinearLayout(this);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        ImageView mark = new ImageView(this);
+        mark.setImageResource(R.drawable.suki_icon_foreground);
+        header.addView(mark, new LinearLayout.LayoutParams(dp(64), dp(64)));
         TextView title = new TextView(this);
-        title.setText("SukiRPC Collector · Pareamento"); title.setTextSize(26); title.setTextColor(Color.WHITE); l.addView(title);
-        info = new TextView(this); info.setTextSize(19); info.setTextColor(Color.WHITE); info.setPadding(0,24,0,24); l.addView(info);
-        pair = new Button(this); pair.setText("Gerar código e QR (5 minutos)"); l.addView(pair); pair.setOnClickListener(v -> generate());
+        title.setText("SukiRPC Collector");
+        title.setTextSize(26);
+        title.setTextColor(0xfff7f1ff);
+        header.addView(title);
+        l.addView(header);
+        info = new TextView(this); info.setTextSize(19); info.setTextColor(Color.WHITE); info.setPadding(0,dp(10),0,dp(10)); l.addView(info);
+        pair = new Button(this); pair.setText("Gerar QR Code"); l.addView(pair); pair.setOnClickListener(v -> generate());
         Button revoke = new Button(this); revoke.setText("Desvincular celular"); l.addView(revoke);
         revoke.setOnClickListener(v -> {
             getSharedPreferences("lan", MODE_PRIVATE).edit().remove("token_hash").apply();
@@ -35,9 +46,15 @@ public class PairActivity extends Activity {
             if (qrDialog != null) qrDialog.dismiss();
             info.setText("Celular desvinculado. Gere um novo código.");
         });
-        setContentView(l);
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.addView(l);
+        setContentView(scroll);
         info.setText("Autorize o acesso às notificações. Depois gere um código ou QR para conectar o celular.");
         pair.requestFocus();
+    }
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
     private List<String> localIps() throws Exception {
         List<String> preferred = new ArrayList<>(), other = new ArrayList<>();

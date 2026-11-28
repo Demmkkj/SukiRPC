@@ -6,18 +6,22 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.os.SystemClock
-import coil.imageLoader
-import coil.request.ImageRequest
-import coil.request.SuccessResult
 import dev.nuvio.presence.Dashboard
+import dev.nuvio.presence.ArtworkImages
+import dev.nuvio.presence.ClockDisplay
+import dev.nuvio.presence.Hidden
+import dev.nuvio.presence.artworkAllowed
+import dev.nuvio.presence.episodeAllowed
+import dev.nuvio.presence.readPrivacy
+import dev.nuvio.presence.readFormat
+import dev.nuvio.presence.mediaPresence
 import dev.nuvio.presence.MainActivity
 import dev.nuvio.presence.Monitor
 import dev.nuvio.presence.PresenceService
 import dev.nuvio.presence.Settings
-import dev.nuvio.presence.publicArtwork
 import dev.nuvio.presence.timestamp
+import dev.nuvio.presence.visibleMediaTitle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +39,7 @@ internal class EclipseNotifications(
     private val stopAction:String
 ){
     private data class Frame(val title:String,val detail:String,val status:String,
-        val art:String="",val progress:Int?=null)
+        val art:String="",val progress:Int?=null,val local:ByteArray?=null)
     private val manager=service.getSystemService(NotificationManager::class.java)
     private val prefs=Settings.prefs(service)
     private var observer:Job?=null
@@ -43,7 +47,6 @@ internal class EclipseNotifications(
     private var active=false
     private var frame:Frame?=null
     private var bitmap:Bitmap?=null
-    private var currentArt=""
     private var generation=0L
     private val open by lazy {
         PendingIntent.getActivity(service,1,Intent(service,MainActivity::class.java)
@@ -55,7 +58,8 @@ internal class EclipseNotifications(
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
     private val listener=SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if(key=="art" || key=="time" || key=="episode") scope.launch { update(Monitor.state.value) }
+        if(key=="art" || key=="time" || key=="episode" || key?.startsWith("prism.") == true ||
+            key?.startsWith("hz.art.") == true) scope.launch { update(Monitor.state.value) }
     }
     private fun base()=Notification.Builder(service,channel)
         .setSmallIcon(dev.nuvio.presence.R.drawable.suki_eclipse_notification)
@@ -86,43 +90,58 @@ internal class EclipseNotifications(
         active=false;generation++
         prefs.unregisterOnSharedPreferenceChangeListener(listener)
         observer?.cancel();observer=null;artworkJob?.cancel();artworkJob=null
-        frame=null;bitmap=null;currentArt=""
+        frame=null;bitmap=null
     }
     private fun snapshot(d:Dashboard):Frame {
+        val privacy = readPrivacy(prefs)
+        val generic = Frame("SukiRPC", d.connection, d.discord)
+        d.studio?.let {
+            return if (privacy.hidden.isNotEmpty() || privacy.blocks(it.name)) generic
+            else Frame(it.name, it.details.ifBlank { "Rich Presence personalizado" }, d.discord)
+        }
         val p=d.playback?.takeIf{it.valid}
-        if(p==null)return Frame("SukiRPC",d.connection,d.discord)
+        if (p == null || privacy.blocks(p.title)) return generic
         val o=Settings.options(service)
+        val format = readFormat(prefs.all)
+        val episodeVisible = episodeAllowed(o, privacy)
+        val progressVisible = o.timestamps && Hidden.Progress !in privacy.hidden && format.clock != ClockDisplay.Off
         val state=when(p.state){
             "playing"->"Reproduzindo";"paused"->"Pausado"
             "buffering","connecting"->"Carregando"
             "forwarding","rewinding"->"Buscando"
             else->"Reprodução ativa"
         }
-        val pos=p.positionAt(SystemClock.elapsedRealtime())
+        val mono = SystemClock.elapsedRealtime()
+        val pos = if (progressVisible) p.positionAt(mono) else -1L
         // Quantize playing progress to 30 s; paused/seek/state changes remain visible.
         val step=if(p.state=="playing" && pos>=0) (pos/30000L)*30000L else pos
-        val progress=if(o.timestamps&&p.duration>0&&step>=0)
+        val progress=if(p.duration>0&&step>=0)
             ((step.toDouble()/p.duration)*100).toInt().coerceIn(0,100) else null
-        val time=if(o.timestamps&&step>=0) {
+        val time=if(step>=0) {
             val prefix=if(p.state=="playing")"≈ " else ""
             prefix+timestamp(step)+(if(p.duration>0)" / "+timestamp(p.duration) else "")
         } else ""
-        val detail=listOf(state,if(o.episode)p.episode.take(180) else "",time)
+        val detail=listOf(state,if(episodeVisible)p.episode.take(180) else "",time)
             .filter{it.isNotBlank()}.joinToString(" · ")
         val source=d.connection.substringBefore(" • ")
         val discord=if(d.discord=="Presença confirmada")"Discord sincronizado" else d.discord
-        val art=if(o.artwork)publicArtwork(p.artwork) else ""
-        return Frame(p.title.take(180),detail,"$source · $discord",art,progress)
+        val art = mediaPresence(p, o, format, privacy, source, mono, System.currentTimeMillis())?.art.orEmpty()
+        val local = p.localArtwork?.takeIf { p.artworkPermitted && artworkAllowed(o, privacy, p.title) }
+        return Frame(visibleMediaTitle(p, privacy, episodeVisible).take(180).ifBlank { "SukiRPC" },
+            detail, "$source · $discord", art, progress, local)
     }
     private fun update(d:Dashboard){
         if(!active||!d.running)return
         val next=snapshot(d)
-        if(next==frame)return
-        frame=next
-        if(next.art!=currentArt){
-            generation++;artworkJob?.cancel();artworkJob=null
-            currentArt=next.art;bitmap=null
-            if(currentArt.isNotBlank())loadArtwork(currentArt,generation)
+        val old = frame
+        if (next == old) return
+        frame = next
+        if (next.art != old?.art || next.local !== old?.local) {
+            generation++
+            artworkJob?.cancel()
+            artworkJob = null
+            bitmap = null
+            if (next.art.isNotBlank() || next.local != null) loadArtwork(next, generation)
         }
         post()
     }
@@ -132,17 +151,19 @@ internal class EclipseNotifications(
         // A denied notification permission must never interrupt the RPC foreground service.
         try{manager.notify(id,build(f,bitmap))}catch(_:RuntimeException){}
     }
-    private fun loadArtwork(url:String,token:Long){
-        artworkJob=scope.launch {
-            val image=try{
-                withContext(Dispatchers.IO){
-                    val request=ImageRequest.Builder(service.applicationContext).data(url)
-                        .size(128,192).allowHardware(false).build()
-                    val result=service.applicationContext.imageLoader.execute(request)
-                    ((result as? SuccessResult)?.drawable as? BitmapDrawable)?.bitmap
-                }
-            }catch(e:CancellationException){throw e}catch(_:Exception){null}
-            if(active&&token==generation&&url==currentArt&&image!=null){bitmap=image;post()}
+    private fun loadArtwork(next: Frame, token: Long) {
+        artworkJob = scope.launch {
+            val image = try {
+                withContext(Dispatchers.IO) { ArtworkImages.bitmap(service, next.art, next.local, 128, 192) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+            if (active && token == generation && image != null) {
+                bitmap = image
+                post()
+            }
         }
     }
 }

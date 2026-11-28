@@ -14,3 +14,10 @@ dependencyResolutionManagement {
 }
 rootProject.name = 'SukiRPC'
 include ':app', ':collector'
+
+if (providers.gradleProperty('sukiBenchmarks').isPresent()) {
+    include ':quality:macrobenchmark', ':quality:microbenchmark'
+}
+if (providers.gradleProperty('sukiVisual').isPresent()) {
+    include ':quality:visual'
+}

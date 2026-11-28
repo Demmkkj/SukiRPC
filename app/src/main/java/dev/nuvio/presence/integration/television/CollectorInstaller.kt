@@ -37,7 +37,7 @@ internal object CollectorInstaller {
         require(port in 1..65535) { "Porta ADB inválida." }
         val file = File.createTempFile("collector-", ".apk", context.cacheDir)
         try {
-            context.assets.open("collector.apk").use { input -> file.outputStream().use { input.copyTo(it) } }
+            verifiedCollector(context,file)
             progress("Conectando… aceite a autorização ADB na Fire TV, se aparecer.")
             Dadb.create(ip, port, keys(context)).use { adb ->
                 fun command(cmd: String): String {
@@ -81,3 +81,4 @@ internal object CollectorInstaller {
         }
     }
 }
+

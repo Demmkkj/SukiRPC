@@ -89,17 +89,24 @@ internal object UpdateClient {
         val names = (0 until assets.length()).map { assets.getJSONObject(it).getString("name") }.toSet()
         require("update.json" in names) { "Release sem manifesto de atualização." }
         val meta = readSmall(base + "update.json", releaseHosts, 65536)
+        parseManifest(meta, tag, names, ctx.packageName, code(current), Build.SUPPORTED_ABIS.toList(), release.optString("body"))
+    }
+
+    internal fun parseManifest(meta: JSONObject, tag: String, names: Set<String>, packageName: String,
+                               installedCode: Long, supportedAbis: List<String>, notes: String): Check {
+        require(tagPattern.matches(tag)) { "Tag de atualização inválida." }
+        val base = "https://github.com/$REPO/releases/download/$tag/"
         val version = meta.getString("versionName"); val versionCode = meta.getLong("versionCode")
-        require(meta.getInt("schema") == 1 && meta.getString("packageName") == ctx.packageName &&
+        require(meta.getInt("schema") == 1 && meta.getString("packageName") == packageName &&
             tag == "v$version-build.${meta.getLong("build")}" && versionCode > 0) { "Manifesto inválido." }
-        if (versionCode <= code(current)) return@withContext Check(null, "Você está atualizado.")
+        if (versionCode <= installedCode) return Check(null, "Você está atualizado.")
         val files = meta.getJSONObject("files")
-        val supported = Build.SUPPORTED_ABIS.filter { it in abis }
+        val supported = supportedAbis.filter { it in abis }
         val abi = (supported + "universal").firstOrNull { files.has(it) && "SukiRPC-$it.apk" in names }
             ?: throw IOException("Nenhum APK compatível.")
         val file = files.getJSONObject(abi); val sha = file.getString("sha256"); val size = file.getLong("size")
         require(hashPattern.matches(sha) && size in 1..MAX_APK) { "Arquivo de atualização inválido." }
-        Check(Release(version, versionCode, abi, base + "SukiRPC-$abi.apk", sha, size, release.optString("body").take(3000)), "Nova versão disponível")
+        return Check(Release(version, versionCode, abi, base + "SukiRPC-$abi.apk", sha, size, notes.take(3000)), "Nova versão disponível")
     }
     private fun verify(ctx: Context, file: File, release: Release) {
         require(file.isFile && file.length() == release.size) { "Tamanho do APK incorreto." }

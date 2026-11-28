@@ -1,22 +1,32 @@
 
-# Local build files and private material
 .gradle/
-.kotlin/
 **/build/
 **/.cxx/
 local.properties
-*.aar
-*.apk
-*.aab
-*.so
-*.jar
+app/libs/*.aar
+
+.kotlin/
+.sukirpc-backup*/
+*.bak
 *.keystore
 *.jks
+app/libs/discord_partner_sdk.aar
+
+# Local diagnostic output (never publish)
+/pairing.log
+
+# Private local build outputs and logs
+/dist/
+*.log
+*.apk
+*.aab
+*.aar
 *.p12
 *.pem
 *.key
-*.log
-*.bak
-.sukirpc-backup*/
-.env*
-/dist/
+
+# Gallery infrastructure (never commit credentials)
+backend/gallery/.wrangler/
+backend/gallery/node_modules/
+backend/gallery/.dev.vars*
+backend/gallery/.env*
